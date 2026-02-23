@@ -167,8 +167,12 @@ func (w *Watcher) FindProjectConversation(projectDir string) error {
 		return fmt.Errorf("failed to get absolute path: %w", err)
 	}
 
-	encoded := strings.ReplaceAll(absPath, "/", "-")
-	claudeProjectDir := filepath.Join(os.Getenv("HOME"), ".claude", "projects", encoded)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+	encoded := strings.ReplaceAll(filepath.ToSlash(absPath), "/", "-")
+	claudeProjectDir := filepath.Join(homeDir, ".claude", "projects", encoded)
 	w.ProjectDir = claudeProjectDir
 
 	// Check if project directory exists
