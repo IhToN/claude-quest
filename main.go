@@ -882,7 +882,12 @@ func runDoctor() {
 	fmt.Println()
 
 	allGood := true
-	home := os.Getenv("HOME")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Printf("  [!!] Could not determine home directory: %v\n", err)
+		allGood = false
+		home = ""
+	}
 
 	// Check Claude Code installation
 	fmt.Println("Claude Code:")
@@ -899,11 +904,12 @@ func runDoctor() {
 	if _, err := os.Stat(projectsDir); err == nil {
 		fmt.Println("  [OK] ~/.claude/projects/ exists")
 
-		// Count project directories
+		// Count project directories (all subdirs are encoded project paths on all platforms,
+		// Unix paths start with "-", Windows paths start with the drive letter e.g. "C:-...")
 		entries, _ := os.ReadDir(projectsDir)
 		projectCount := 0
 		for _, e := range entries {
-			if e.IsDir() && strings.HasPrefix(e.Name(), "-") {
+			if e.IsDir() {
 				projectCount++
 			}
 		}
@@ -919,7 +925,7 @@ func runDoctor() {
 
 	cwd, _ := os.Getwd()
 	absPath, _ := filepath.Abs(cwd)
-	encoded := strings.ReplaceAll(absPath, "/", "-")
+	encoded := strings.ReplaceAll(filepath.ToSlash(absPath), "/", "-")
 	projectDir := filepath.Join(projectsDir, encoded)
 
 	fmt.Printf("  Path: %s\n", cwd)
